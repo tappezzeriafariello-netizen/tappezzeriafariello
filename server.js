@@ -243,6 +243,7 @@ app.get('/admin', requireAuth, (req, res) => res.sendFile(path.join(root, 'admin
 app.get('/', (req, res) => res.sendFile(path.join(root, 'index.html')));
 app.get('/privacy.html', (req, res) => res.sendFile(path.join(root, 'privacy.html')));
 app.get('/cookie.html', (req, res) => res.sendFile(path.join(root, 'cookie.html')));
+app.get('/navigation.js', (req, res) => res.sendFile(path.join(root, 'navigation.js')));
 app.get('/favicon.ico', (req, res) => res.sendFile(path.join(root, 'favicon.ico')));
 
 app.use((error, req, res, next) => {
