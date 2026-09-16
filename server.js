@@ -52,6 +52,10 @@ function readSiteConfig() {
   return JSON.parse(fs.readFileSync(siteConfigPath, 'utf8'));
 }
 
+function publicOrigin(req) {
+  return String(process.env.PUBLIC_SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+}
+
 async function supabaseRequest(table, options = {}) {
   const response = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
     ...options,
@@ -89,6 +93,7 @@ const loginLimiter = rateLimit({
 });
 
 app.disable('x-powered-by');
+app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 app.use(express.json({ limit: '100kb' }));
@@ -133,6 +138,15 @@ app.get('/api/products', async (req, res, next) => {
 
 app.get('/api/site-config', (req, res) => {
   res.json(readSiteConfig());
+});
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /login\nDisallow: /api/\nSitemap: ${publicOrigin(req)}/sitemap.xml\n`);
+});
+
+app.get('/sitemap.xml', (req, res) => {
+  const origin = publicOrigin(req);
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${origin}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>${origin}/privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>\n  <url><loc>${origin}/cookie.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>\n</urlset>`);
 });
 
 app.post('/api/contact', async (req, res, next) => {
