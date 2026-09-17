@@ -19,11 +19,11 @@
     const next = new DOMParser().parseFromString(await response.text(), 'text/html');
     const update = async () => {
       document.title = next.title;
+      if (addHistory) history.pushState({ url, scrollY: 0 }, '', url);
       document.head.querySelectorAll('style:not(:last-of-type)').forEach(style => style.remove());
       next.head.querySelectorAll('style').forEach(style => document.head.insertBefore(style.cloneNode(true), transitionStyle));
       document.body.innerHTML = next.body.innerHTML;
       await executePageScripts(document.body);
-      if (addHistory) history.pushState({ url, scrollY: 0 }, '', url);
       const destination = new URL(url, location.href);
       const savedScroll = sessionStorage.getItem(`fariello-scroll:${destination.pathname}${destination.hash}`);
       window.scrollTo(0, savedScroll ? Number(savedScroll) : (history.state && Number.isFinite(history.state.scrollY) ? history.state.scrollY : 0));
