@@ -27,10 +27,21 @@ Dopo aver salvato `site-config.json`, aggiorna il browser. Se il server e' stato
 
 1. Apri `http://localhost:3000/admin`.
 2. Accedi con le credenziali presenti nel file `.env`.
-3. Compila nome, categoria, URL della foto e descrizione.
+3. Compila nome, categoria, gli URL delle foto (uno per riga, massimo 12) e descrizione.
 4. Premi `Salva prodotto`.
 
 Le categorie disponibili sono `Letti`, `Divani`, `Poltrone` e `Materassi`.
+
+### Migrazione Supabase per la galleria
+
+Nel pannello SQL di Supabase esegui una volta:
+
+```sql
+alter table products add column if not exists images jsonb not null default '[]'::jsonb;
+update products set images = jsonb_build_array(image) where jsonb_array_length(images) = 0;
+```
+
+La colonna esistente `image` resta per compatibilità e contiene sempre la prima foto. I nuovi prodotti usano `images` per la galleria.
 
 ## Come avviare il sito
 

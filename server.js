@@ -121,10 +121,11 @@ function cleanProduct(body) {
   const name = String(body.name || '').trim().slice(0, 120);
   const category = String(body.category || '').trim();
   const description = String(body.description || '').trim().slice(0, 500);
-  const image = String(body.image || '').trim().slice(0, 1000);
+  const requestedImages = Array.isArray(body.images) ? body.images : String(body.images || body.image || '').split(/\r?\n/);
+  const images = [...new Set(requestedImages.map(image => String(image).trim()).filter(image => /^https?:\/\//i.test(image)))].slice(0, 12);
   const validCategories = ['Letti', 'Divani', 'Poltrone', 'Materassi'];
-  if (!name || !validCategories.includes(category) || !description || !/^https?:\/\//i.test(image)) return null;
-  return { name, category, description, image };
+  if (!name || !validCategories.includes(category) || !description || !images.length) return null;
+  return { name, category, description, image: images[0], images };
 }
 
 app.get('/api/products', async (req, res, next) => {
@@ -257,6 +258,7 @@ app.get('/admin', requireAuth, (req, res) => res.sendFile(path.join(root, 'admin
 app.get('/', (req, res) => res.sendFile(path.join(root, 'index.html')));
 app.get('/privacy.html', (req, res) => res.sendFile(path.join(root, 'privacy.html')));
 app.get('/cookie.html', (req, res) => res.sendFile(path.join(root, 'cookie.html')));
+app.get('/product.html', (req, res) => res.sendFile(path.join(root, 'product.html')));
 app.get('/navigation.js', (req, res) => res.sendFile(path.join(root, 'navigation.js')));
 app.get('/favicon.ico', (req, res) => res.sendFile(path.join(root, 'favicon.ico')));
 
