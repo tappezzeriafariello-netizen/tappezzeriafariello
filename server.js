@@ -137,6 +137,16 @@ app.get('/api/products', async (req, res, next) => {
   }
 });
 
+app.get('/api/products/:id', async (req, res, next) => {
+  try {
+    const products = await supabaseRequest(`products?id=eq.${encodeURIComponent(req.params.id)}&select=*`);
+    if (!products.length) return res.status(404).json({ error: 'Prodotto non trovato.' });
+    res.json(mapProduct(products[0]));
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get('/api/site-config', (req, res) => {
   res.json(readSiteConfig());
 });
