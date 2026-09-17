@@ -53,6 +53,25 @@ Sito pubblico: `http://localhost:3000`
 
 Pannello riservato: `http://localhost:3000/admin`
 
+### Notifiche Telegram per i contatti
+
+Il form salva sempre la richiesta in Supabase. Se configuri queste due variabili nel file `.env`, il server invia anche una notifica Telegram:
+
+```env
+TELEGRAM_BOT_TOKEN=token_del_bot
+TELEGRAM_CHAT_ID=id_della_chat
+```
+
+Per creare il bot:
+
+1. Cerca `@BotFather` su Telegram, invia `/newbot` e copia il token ricevuto.
+2. Apri la chat con il nuovo bot e invia almeno un messaggio.
+3. Apri `https://api.telegram.org/botTOKEN/getUpdates`, sostituendo `TOKEN` con il token del bot.
+4. Nel JSON cerca `chat` e copia il valore numerico di `id` in `TELEGRAM_CHAT_ID`.
+5. Riavvia il server dopo aver modificato `.env`.
+
+La notifica è facoltativa: se Telegram non è configurato o non risponde, la richiesta resta comunque salvata e il cliente riceve la conferma del form.
+
 ## File da non modificare
 
 - `.env`: contiene password e segreti. Non pubblicarlo.

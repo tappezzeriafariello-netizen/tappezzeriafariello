@@ -17,6 +17,8 @@ const dataPath = path.join(root, 'data.json');
 const siteConfigPath = path.join(root, 'site-config.json');
 const supabaseUrl = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const telegramBotToken = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
+const telegramChatId = String(process.env.TELEGRAM_CHAT_ID || '').trim();
 
 function createId() {
   return typeof crypto.randomUUID === 'function'
@@ -73,6 +75,27 @@ async function supabaseRequest(table, options = {}) {
   if (response.status === 204) return null;
   const body = await response.text();
   return body ? JSON.parse(body) : null;
+}
+
+async function sendTelegramNotification({ name, email, message }) {
+  if (!telegramBotToken || !telegramChatId) return;
+  const text = [
+    'Nuova richiesta dal sito',
+    '',
+    `Nome: ${name}`,
+    `Email: ${email}`,
+    '',
+    message
+  ].join('\n').slice(0, 4096);
+  const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: telegramChatId, text })
+  });
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Telegram ${response.status}: ${details}`);
+  }
 }
 
 function mapProduct(row) {
@@ -171,6 +194,11 @@ app.post('/api/contact', async (req, res, next) => {
       headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ name, email, message, read: false })
     });
+    try {
+      await sendTelegramNotification({ name, email, message });
+    } catch (error) {
+      console.error('Notifica Telegram non riuscita:', error);
+    }
     res.status(201).json({ ok: true });
   } catch (error) {
     next(error);
