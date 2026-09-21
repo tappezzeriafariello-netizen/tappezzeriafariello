@@ -36,7 +36,7 @@
   }
 
   const transitionStyle = document.createElement('style');
-  transitionStyle.textContent = '::view-transition-old(root){animation:page-out .35s ease both}::view-transition-new(root){animation:page-in .55s cubic-bezier(.2,.7,.2,1) both}@keyframes page-out{to{opacity:0;transform:translateY(-14px)}}@keyframes page-in{from{opacity:0;transform:translateY(18px)}}';
+  transitionStyle.textContent = 'html,html *{cursor:none !important}::view-transition-old(root){animation:page-out .35s ease both}::view-transition-new(root){animation:page-in .55s cubic-bezier(.2,.7,.2,1) both}@keyframes page-out{to{opacity:0;transform:translateY(-14px)}}@keyframes page-in{from{opacity:0;transform:translateY(18px)}}';
   document.head.appendChild(transitionStyle);
 
   async function executePageScripts(body) {
