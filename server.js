@@ -15,10 +15,64 @@ const port = Number(process.env.PORT || 3000);
 const isProduction = process.env.NODE_ENV === 'production';
 const dataPath = path.join(root, 'data.json');
 const siteConfigPath = path.join(root, 'site-config.json');
+const indexTemplatePath = path.join(root, 'index.html');
+const homeTemplate = fs.readFileSync(indexTemplatePath, 'utf8');
 const supabaseUrl = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const telegramBotToken = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
 const telegramChatId = String(process.env.TELEGRAM_CHAT_ID || '').trim();
+
+const routeMeta = {
+  '/': {
+    route: 'home',
+    title: 'Tappezzeria Fariello | La casa, fatta bene',
+    description: 'Tappezzeria Fariello: sartoria d\'interni, divani, letti, poltrone e materassi su misura.',
+    ogTitle: 'Tappezzeria Fariello | La casa, fatta bene',
+    ogDescription: 'Sartoria d\'interni a Corato: divani, letti, poltrone e materassi su misura fatti a mano.'
+  },
+  '/catalogo': {
+    route: 'catalogo',
+    title: 'Catalogo | Tappezzeria Fariello',
+    description: 'Catalogo dei divani, letti, poltrone e materassi fatti a mano su misura da Tappezzeria Fariello.',
+    ogTitle: 'Catalogo divani e letti su misura | Tappezzeria Fariello',
+    ogDescription: 'Scopri il catalogo della Tappezzeria Fariello: divani, letti, poltrone e materassi su misura in Puglia.'
+  },
+  '/collezione': {
+    route: 'catalogo',
+    title: 'Catalogo | Tappezzeria Fariello',
+    description: 'Catalogo dei divani, letti, poltrone e materassi fatti a mano su misura da Tappezzeria Fariello.',
+    ogTitle: 'Catalogo divani e letti su misura | Tappezzeria Fariello',
+    ogDescription: 'Scopri il catalogo della Tappezzeria Fariello: divani, letti, poltrone e materassi su misura in Puglia.'
+  },
+  '/storia': {
+    route: 'storia',
+    title: 'La storia | Tappezzeria Fariello',
+    description: 'Scopri la storia di Tappezzeria Fariello: artigianato, cura del mestiere e qualità fatta a mano.',
+    ogTitle: 'La nostra storia | Tappezzeria Fariello',
+    ogDescription: 'Un laboratorio artigiano, un mestiere fatto di cura, qualità e mobilità su misura da oltre vent'anni.'
+  },
+  '/contatti': {
+    route: 'contatti',
+    title: 'Contatti | Tappezzeria Fariello',
+    description: 'Contatta Tappezzeria Fariello per un divano, letto, materasso o rivestimento su misura.',
+    ogTitle: 'Contatti Tappezzeria Fariello',
+    ogDescription: 'Richiedi un preventivo per divani, letti, materassi e rivestimenti su misura a Corato.'
+  }
+};
+
+function renderHomePage(req, route = '/') {
+  const safeRoute = Object.prototype.hasOwnProperty.call(routeMeta, route) ? route : '/';
+  const { route: pageRoute, title, description, ogTitle, ogDescription } = routeMeta[safeRoute];
+  const canonicalUrl = `${publicOrigin(req)}${safeRoute}`;
+
+  return homeTemplate
+    .replace(/\{\{PAGE_TITLE\}\}/g, title)
+    .replace(/\{\{PAGE_DESCRIPTION\}\}/g, description)
+    .replace(/\{\{OG_TITLE\}\}/g, ogTitle || title)
+    .replace(/\{\{OG_DESCRIPTION\}\}/g, ogDescription || description)
+    .replace(/\{\{CANONICAL_URL\}\}/g, canonicalUrl)
+    .replace(/\{\{PAGE_ROUTE\}\}/g, pageRoute);
+}
 
 function createId() {
   return typeof crypto.randomUUID === 'function'
@@ -180,7 +234,23 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', (req, res) => {
   const origin = publicOrigin(req);
-  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${origin}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>${origin}/privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>\n  <url><loc>${origin}/cookie.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>\n</urlset>`);
+  const urls = [
+    '/',
+    '/catalogo',
+    '/collezione',
+    '/storia',
+    '/contatti',
+    '/privacy.html',
+    '/cookie.html'
+  ];
+
+  const body = urls.map((path) => {
+    const priority = path === '/' ? '1.0' : '0.7';
+    const changefreq = path === '/' ? 'weekly' : 'monthly';
+    return `  <url><loc>${origin}${path}</loc><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
+  }).join('\n');
+
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>`);
 });
 
 app.post('/api/contact', async (req, res, next) => {
@@ -293,7 +363,10 @@ app.delete('/api/admin/products/:id', requireAuth, async (req, res, next) => {
 
 app.get('/login', (req, res) => res.sendFile(path.join(root, 'admin.html')));
 app.get('/admin', requireAuth, (req, res) => res.sendFile(path.join(root, 'admin.html')));
-app.get('/', (req, res) => res.sendFile(path.join(root, 'index.html')));
+app.get(['/', '/catalogo', '/collezione', '/storia', '/contatti'], (req, res) => {
+  const route = req.path || '/';
+  res.send(renderHomePage(req, route));
+});
 app.get('/privacy.html', (req, res) => res.sendFile(path.join(root, 'privacy.html')));
 app.get('/cookie.html', (req, res) => res.sendFile(path.join(root, 'cookie.html')));
 app.get('/product.html', (req, res) => res.sendFile(path.join(root, 'product.html')));

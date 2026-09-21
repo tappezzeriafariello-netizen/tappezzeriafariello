@@ -1,4 +1,34 @@
 (function () {
+  const routeSections = {
+    '/': 'home',
+    '/catalogo': 'catalogo',
+    '/collezione': 'catalogo',
+    '/storia': 'storia',
+    '/contatti': 'contatti'
+  };
+
+  function normalizeHashRoute() {
+    const fragment = location.hash ? location.hash.slice(1).toLowerCase() : '';
+    const mappedPath = {
+      contatti: '/contatti',
+      storia: '/storia',
+      catalogo: '/catalogo',
+      collezione: '/collezione'
+    }[fragment];
+    if (mappedPath && location.pathname === '/') {
+      history.replaceState(null, '', mappedPath);
+    }
+  }
+
+  function scrollToRouteSection(pathname) {
+    const sectionId = routeSections[pathname] || routeSections['/'];
+    const target = document.getElementById(sectionId);
+    if (!target) return;
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: 'instant', block: 'start' });
+    });
+  }
+
   const transitionStyle = document.createElement('style');
   transitionStyle.textContent = '::view-transition-old(root){animation:page-out .35s ease both}::view-transition-new(root){animation:page-in .55s cubic-bezier(.2,.7,.2,1) both}@keyframes page-out{to{opacity:0;transform:translateY(-14px)}}@keyframes page-in{from{opacity:0;transform:translateY(18px)}}';
   document.head.appendChild(transitionStyle);
@@ -42,6 +72,22 @@
       navigate(sessionStorage.getItem('fariello-return-url') || '/').catch(() => { location.href = link.href; });
       return;
     }
+    const mappedRoute = {
+      '#contatti': '/contatti',
+      '#storia': '/storia',
+      '#catalogo': '/catalogo',
+      '#collezione': '/collezione'
+    }[url.hash] || null;
+    if (mappedRoute) {
+      event.preventDefault();
+      history.pushState({ url: mappedRoute, scrollY: window.scrollY }, '', mappedRoute);
+      scrollToRouteSection(mappedRoute);
+      const topbar = document.querySelector('.topbar');
+      const menu = document.querySelector('.menu');
+      if (topbar) topbar.classList.remove('menu-open');
+      if (menu) { menu.setAttribute('aria-expanded', 'false'); menu.textContent = 'Menu'; }
+      return;
+    }
     if (url.hash && url.pathname === location.pathname) {
       event.preventDefault();
       const target = document.querySelector(url.hash);
@@ -60,5 +106,11 @@
     navigate(`${url.pathname}${url.search}${url.hash}`).catch(() => { location.href = link.href; });
   });
 
-  window.addEventListener('popstate', () => navigate(location.href, false).catch(() => location.reload()));
+  normalizeHashRoute();
+  scrollToRouteSection(location.pathname);
+  window.addEventListener('popstate', () => {
+    normalizeHashRoute();
+    scrollToRouteSection(location.pathname);
+    navigate(location.href, false).catch(() => location.reload());
+  });
 })();
