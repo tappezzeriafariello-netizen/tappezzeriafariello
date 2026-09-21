@@ -65,7 +65,15 @@
       if (destination.hash) {
         requestAnimationFrame(() => document.querySelector(destination.hash)?.scrollIntoView({ behavior: 'instant', block: 'start' }));
       } else if (destinationSection) {
-        requestAnimationFrame(() => document.getElementById(destinationSection)?.scrollIntoView({ behavior: 'instant', block: 'start' }));
+        const catalogScroll = destination.pathname === '/catalogo' ? sessionStorage.getItem('fariello-catalogo-scroll') : null;
+        requestAnimationFrame(() => {
+          if (catalogScroll !== null) {
+            window.scrollTo(0, Number(catalogScroll));
+            sessionStorage.removeItem('fariello-catalogo-scroll');
+          } else {
+            document.getElementById(destinationSection)?.scrollIntoView({ behavior: 'instant', block: 'start' });
+          }
+        });
       } else {
         if (shouldResetScroll(destination.pathname)) {
           window.scrollTo(0, 0);
@@ -82,7 +90,11 @@
     const link = event.target.closest('a');
     if (!link || link.target === '_blank' || link.origin !== location.origin) return;
     const url = new URL(link.href);
-    if (url.pathname === '/product.html') return;
+    if (url.pathname === '/product.html') {
+      sessionStorage.setItem('fariello-return-url', `${location.pathname}${location.search}${location.hash}`);
+      if (location.pathname === '/catalogo') sessionStorage.setItem('fariello-catalogo-scroll', String(window.scrollY));
+      return;
+    }
     if (link.classList.contains('back')) {
       event.preventDefault();
       const isLegalPage = legalPages.includes(location.pathname);
