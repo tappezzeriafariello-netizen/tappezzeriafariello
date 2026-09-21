@@ -7,6 +7,7 @@
     '/contatti': 'contatti'
   };
   const legalPages = ['/privacy.html', '/cookie.html'];
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
   function shouldResetScroll(pathname) {
     return legalPages.includes(pathname) || !routeSections[pathname];
@@ -68,8 +69,13 @@
         const catalogScroll = destination.pathname === '/catalogo' ? sessionStorage.getItem('fariello-catalogo-scroll') : null;
         requestAnimationFrame(() => {
           if (catalogScroll !== null) {
-            window.scrollTo(0, Number(catalogScroll));
-            sessionStorage.removeItem('fariello-catalogo-scroll');
+            const restoreCatalogScroll = () => window.scrollTo(0, Number(catalogScroll));
+            restoreCatalogScroll();
+            window.setTimeout(restoreCatalogScroll, 250);
+            window.setTimeout(() => {
+              restoreCatalogScroll();
+              sessionStorage.removeItem('fariello-catalogo-scroll');
+            }, 800);
           } else {
             document.getElementById(destinationSection)?.scrollIntoView({ behavior: 'instant', block: 'start' });
           }
