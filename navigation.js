@@ -76,7 +76,9 @@
     if (url.pathname === '/product.html') return;
     if (link.classList.contains('back')) {
       event.preventDefault();
-      navigate(sessionStorage.getItem('fariello-return-url') || '/').catch(() => { location.href = link.href; });
+      const isLegalPage = ['/privacy.html', '/cookie.html'].includes(location.pathname);
+      const destination = isLegalPage ? '/' : (sessionStorage.getItem('fariello-return-url') || '/');
+      navigate(destination).catch(() => { location.href = destination; });
       return;
     }
     const mappedRoute = {
