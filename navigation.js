@@ -56,8 +56,14 @@
       await executePageScripts(document.body);
       const destination = new URL(url, location.href);
       const savedScroll = sessionStorage.getItem(`fariello-scroll:${destination.pathname}${destination.hash}`);
-      window.scrollTo(0, savedScroll ? Number(savedScroll) : (history.state && Number.isFinite(history.state.scrollY) ? history.state.scrollY : 0));
-      if (destination.hash) requestAnimationFrame(() => document.querySelector(destination.hash)?.scrollIntoView({ behavior: 'instant', block: 'start' }));
+      const destinationSection = routeSections[destination.pathname];
+      if (destination.hash) {
+        requestAnimationFrame(() => document.querySelector(destination.hash)?.scrollIntoView({ behavior: 'instant', block: 'start' }));
+      } else if (destinationSection) {
+        requestAnimationFrame(() => document.getElementById(destinationSection)?.scrollIntoView({ behavior: 'instant', block: 'start' }));
+      } else {
+        window.scrollTo(0, savedScroll ? Number(savedScroll) : (history.state && Number.isFinite(history.state.scrollY) ? history.state.scrollY : 0));
+      }
     };
     if (document.startViewTransition) await document.startViewTransition(update).finished;
     else await update();
