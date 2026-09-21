@@ -49,7 +49,7 @@ const routeMeta = {
     title: 'La storia | Tappezzeria Fariello',
     description: 'Scopri la storia di Tappezzeria Fariello: artigianato, cura del mestiere e qualità fatta a mano.',
     ogTitle: 'La nostra storia | Tappezzeria Fariello',
-    ogDescription: 'Un laboratorio artigiano, un mestiere fatto di cura, qualità e mobilità su misura da oltre vent'anni.'
+    ogDescription: 'Un laboratorio artigiano, un mestiere fatto di cura, qualità e mobilità su misura da oltre vent\'anni.'
   },
   '/contatti': {
     route: 'contatti',
