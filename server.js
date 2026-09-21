@@ -237,7 +237,6 @@ app.get('/sitemap.xml', (req, res) => {
   const urls = [
     '/',
     '/catalogo',
-    '/collezione',
     '/storia',
     '/contatti',
     '/privacy.html',
