@@ -73,6 +73,7 @@
     const link = event.target.closest('a');
     if (!link || link.target === '_blank' || link.origin !== location.origin) return;
     const url = new URL(link.href);
+    if (url.pathname === '/product.html') return;
     if (link.classList.contains('back')) {
       event.preventDefault();
       navigate(sessionStorage.getItem('fariello-return-url') || '/').catch(() => { location.href = link.href; });
