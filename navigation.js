@@ -6,6 +6,11 @@
     '/storia': 'storia',
     '/contatti': 'contatti'
   };
+  const legalPages = ['/privacy.html', '/cookie.html'];
+
+  function shouldResetScroll(pathname) {
+    return legalPages.includes(pathname) || !routeSections[pathname];
+  }
 
   function normalizeHashRoute() {
     const fragment = location.hash ? location.hash.slice(1).toLowerCase() : '';
@@ -62,7 +67,11 @@
       } else if (destinationSection) {
         requestAnimationFrame(() => document.getElementById(destinationSection)?.scrollIntoView({ behavior: 'instant', block: 'start' }));
       } else {
-        window.scrollTo(0, savedScroll ? Number(savedScroll) : (history.state && Number.isFinite(history.state.scrollY) ? history.state.scrollY : 0));
+        if (shouldResetScroll(destination.pathname)) {
+          window.scrollTo(0, 0);
+        } else {
+          window.scrollTo(0, savedScroll ? Number(savedScroll) : (history.state && Number.isFinite(history.state.scrollY) ? history.state.scrollY : 0));
+        }
       }
     };
     if (document.startViewTransition) await document.startViewTransition(update).finished;
@@ -76,7 +85,7 @@
     if (url.pathname === '/product.html') return;
     if (link.classList.contains('back')) {
       event.preventDefault();
-      const isLegalPage = ['/privacy.html', '/cookie.html'].includes(location.pathname);
+      const isLegalPage = legalPages.includes(location.pathname);
       const destination = isLegalPage ? '/' : (sessionStorage.getItem('fariello-return-url') || '/');
       navigate(destination).catch(() => { location.href = destination; });
       return;
