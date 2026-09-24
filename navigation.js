@@ -36,8 +36,27 @@
   }
 
   const transitionStyle = document.createElement('style');
-  transitionStyle.textContent = 'html,html *{cursor:none !important}::view-transition-old(root){animation:page-out .35s ease both}::view-transition-new(root){animation:page-in .55s cubic-bezier(.2,.7,.2,1) both}@keyframes page-out{to{opacity:0;transform:translateY(-14px)}}@keyframes page-in{from{opacity:0;transform:translateY(18px)}}';
+  transitionStyle.textContent = 'html:has(.cursor),html:has(.cursor) *{cursor:none !important}.cursor,.cursor-ring{position:fixed;pointer-events:none;z-index:20;border-radius:50%;transform:translate(-50%,-50%)}.cursor{width:6px;height:6px;background:#2a5b3d}.cursor-ring{width:32px;height:32px;border:1px solid #20201e;transition:width .25s,height .25s,border-color .25s,background .25s}.cursor-ring.active{width:64px;height:64px;border-color:#2a5b3d;background:rgba(42,91,61,.1)}@media(max-width:700px){html:has(.cursor),html:has(.cursor) *{cursor:auto !important}.cursor,.cursor-ring{display:none}}::view-transition-old(root){animation:page-out .35s ease both}::view-transition-new(root){animation:page-in .55s cubic-bezier(.2,.7,.2,1) both}@keyframes page-out{to{opacity:0;transform:translateY(-14px)}}@keyframes page-in{from{opacity:0;transform:translateY(18px)}}';
   document.head.appendChild(transitionStyle);
+
+  function initializeCursor() {
+    if (document.querySelector('.cursor')) return;
+    const cursor = document.createElement('div');
+    const ring = document.createElement('div');
+    cursor.className = 'cursor';
+    ring.className = 'cursor-ring';
+    document.body.append(cursor, ring);
+    window.addEventListener('mousemove', event => {
+      cursor.style.left = `${event.clientX}px`;
+      cursor.style.top = `${event.clientY}px`;
+      ring.style.left = `${event.clientX}px`;
+      ring.style.top = `${event.clientY}px`;
+    });
+    document.querySelectorAll('a,button').forEach(element => {
+      element.addEventListener('mouseenter', () => ring.classList.add('active'));
+      element.addEventListener('mouseleave', () => ring.classList.remove('active'));
+    });
+  }
 
   async function executePageScripts(body) {
     const scripts = [...body.querySelectorAll('script')];
@@ -59,6 +78,7 @@
       document.head.querySelectorAll('style:not(:last-of-type)').forEach(style => style.remove());
       next.head.querySelectorAll('style').forEach(style => document.head.insertBefore(style.cloneNode(true), transitionStyle));
       document.body.innerHTML = next.body.innerHTML;
+      initializeCursor();
       await executePageScripts(document.body);
       const destination = new URL(url, location.href);
       const savedScroll = sessionStorage.getItem(`fariello-scroll:${destination.pathname}${destination.hash}`);
@@ -143,6 +163,7 @@
   });
 
   normalizeHashRoute();
+  initializeCursor();
   scrollToRouteSection(location.pathname);
   window.addEventListener('popstate', () => {
     normalizeHashRoute();
