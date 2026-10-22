@@ -53,6 +53,26 @@ Sito pubblico: `http://localhost:3000`
 
 Pannello riservato: `http://localhost:3000/admin`
 
+### Installare le dipendenze su un VPS Ubuntu
+
+Il progetto dichiara già le proprie dipendenze Node.js in `package.json` e le
+versioni bloccate in `package-lock.json`. Dopo aver clonato il progetto sul VPS,
+dalla sua cartella esegui:
+
+```bash
+bash deploy/install-ubuntu.sh
+```
+
+Lo script installa Node.js 22, Git e Caddy e poi esegue `npm ci --omit=dev`.
+Usa un account con `sudo`; non lanciare il server come root. Questo prepara i
+programmi necessari, ma non pubblica ancora il sito: prima di attivare Caddy
+servono il dominio, la configurazione del servizio e le variabili segrete.
+
+Non mettere `.env`, password o chiavi Supabase nel repository. Sul VPS dovrai
+configurare `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `SUPABASE_URL` e
+`SUPABASE_SERVICE_ROLE_KEY`; `PUBLIC_SITE_URL` e le variabili Telegram sono
+facoltative.
+
 ### Notifiche Telegram per i contatti
 
 Il form salva sempre la richiesta in Supabase. Se configuri queste due variabili nel file `.env`, il server invia anche una notifica Telegram:
